@@ -180,7 +180,6 @@ dotnet publish DailyCheck/DailyCheck.csproj -c Release -r win-x64 --self-contain
 │   ├── gen_plan.py              # 按记忆规律生成每日清单
 │   ├── check_plan.py            # 校验计划有无遗漏日期
 │   └── JsonTest/                # 验证数据存取不丢失
-├── 91天备考计划总览.md           # 设计理念：间隔复习怎么排
 └── 使用说明.md                   # 面向使用者的详细说明
 ```
 
@@ -210,7 +209,6 @@ dotnet publish DailyCheck/DailyCheck.csproj -c Release -r win-x64 --self-contain
 ## 相关文档
 
 - [`使用说明.md`](使用说明.md) —— 面向使用者的完整说明
-- [`91天备考计划总览.md`](91天备考计划总览.md) —— 间隔复习（D+1 / D+3 / D+7 / D+15）的排期原理
 
 ## License
 

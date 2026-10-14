@@ -206,12 +206,12 @@ public class AiBridgeService
             WorkingDirectory = Path.GetTempPath(),
         };
 
-        // 如果 PATH 里找不到 claude，补上 npm 全局目录
-        if (FindClaudeDir() is null && Directory.Exists(@"D:\nodejs\node_global"))
+        // 如果 PATH 里找不到 claude，补上 npm / Node 的常见全局目录
+        if (FindClaudeDir() is null && FindClaudeFallbackDir() is { } fallback)
         {
             var path = psi.EnvironmentVariables["PATH"]
                        ?? Environment.GetEnvironmentVariable("PATH") ?? "";
-            psi.EnvironmentVariables["PATH"] = @"D:\nodejs\node_global;" + path;
+            psi.EnvironmentVariables["PATH"] = fallback + ";" + path;
         }
 
         using var proc = new Process { StartInfo = psi };
@@ -266,18 +266,48 @@ public class AiBridgeService
         foreach (var raw in pathVar.Split(';', StringSplitOptions.RemoveEmptyEntries))
         {
             var dir = raw.Trim().Trim('"');
-            if (dir.Length == 0) continue;
-            try
-            {
-                if (File.Exists(Path.Combine(dir, "claude.cmd")) ||
-                    File.Exists(Path.Combine(dir, "claude.exe")))
-                    return dir;
-            }
-            catch
-            {
-                // 路径非法直接跳过
-            }
+            if (dir.Length > 0 && HasClaude(dir)) return dir;
         }
         return null;
+    }
+
+    /// <summary>
+    /// PATH 里没有 claude 时，到 npm / Node 的常见全局目录里碰碰运气。
+    /// 这些位置随安装方式而变，所以逐个探测，不写死某一台机器的路径。
+    /// </summary>
+    private static string? FindClaudeFallbackDir()
+    {
+        var candidates = new List<string>();
+
+        // npm 默认的全局目录：%APPDATA%\npm
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        if (appData.Length > 0) candidates.Add(Path.Combine(appData, "npm"));
+
+        // 改过 npm prefix 的情况
+        foreach (var name in new[] { "NPM_CONFIG_PREFIX", "NODE_HOME" })
+        {
+            var value = Environment.GetEnvironmentVariable(name);
+            if (!string.IsNullOrWhiteSpace(value)) candidates.Add(value);
+        }
+
+        // Node.js 官方安装目录
+        var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        if (programFiles.Length > 0) candidates.Add(Path.Combine(programFiles, "nodejs"));
+
+        return candidates.FirstOrDefault(HasClaude);
+    }
+
+    /// <summary>目录里是否有 claude 可执行文件（路径非法时视为没有）</summary>
+    private static bool HasClaude(string dir)
+    {
+        try
+        {
+            return File.Exists(Path.Combine(dir, "claude.cmd")) ||
+                   File.Exists(Path.Combine(dir, "claude.exe"));
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
