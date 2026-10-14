@@ -1,0 +1,22 @@
+# 自动识别文本文件；在仓库内统一按 LF 存储，检出时由 Git 按平台处理
+* text=auto
+
+# 显式声明文本类型
+*.cs      text
+*.xaml    text
+*.csproj  text
+*.sln     text
+*.md      text
+*.json    text
+*.py      text
+
+# Windows 脚本保留 CRLF
+*.bat     text eol=crlf
+*.cmd     text eol=crlf
+
+# 二进制文件不做换行符转换
+*.exe     binary
+*.dll     binary
+*.ico     binary
+*.png     binary
+*.pdb     binary
